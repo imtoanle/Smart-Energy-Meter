@@ -3,7 +3,6 @@
 #include <PZEM004Tv30.h>
 #include <SoftwareSerial.h>
 
-
 #if defined(ESP32)
   #error "Software Serial is not supported on the ESP32"
   #include <WiFiMulti.h>
@@ -29,19 +28,7 @@ PZEM004Tv30 pzem(pzemSWSerial);
 
 #include <InfluxDbClient.h>
 #include <InfluxDbCloud.h>
-
-// WiFi AP SSID
-#define WIFI_SSID "Fat Space"
-// WiFi password
-#define WIFI_PASSWORD "hoituivoich"
-// InfluxDB v2 server url, e.g. https://eu-central-1-1.aws.cloud2.influxdata.com (Use: InfluxDB UI -> Load Data -> Client Libraries)
-#define INFLUXDB_URL "https://influxdb2.fat-space.com"
-// InfluxDB v2 server or cloud API authentication token (Use: InfluxDB UI -> Data -> Tokens -> <select token>)
-#define INFLUXDB_TOKEN "P3Y0XaNZBAE4kyyPFBNszTyLn_cGWRnNO8qYNJzlsv4Xep11uTnwERtlkLn7EuHUcuWjByc2fN4yNK67a3Dkeg=="
-// InfluxDB v2 organization id (Use: InfluxDB UI -> User -> About -> Common Ids )
-#define INFLUXDB_ORG "Fat Space"
-// InfluxDB v2 bucket name (Use: InfluxDB UI ->  Data -> Buckets)
-#define INFLUXDB_BUCKET "smart-energy-meter"
+#include <secrets.h>
 
 // Set timezone string according to https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html
 // Examples:
@@ -52,39 +39,6 @@ PZEM004Tv30 pzem(pzemSWSerial);
 #define TZ_INFO "Asia/Ho_Chi_Minh"
 
 // openssl s_client -showcerts -connect influxdb2.fat-space.com:443
-
-const char InfluxDbFatSpace2CACert[] PROGMEM =  R"EOF( 
------BEGIN CERTIFICATE-----
-MIIFNzCCBN6gAwIBAgIQC69tmMiGgT9Tsz7/F4dWHzAKBggqhkjOPQQDAjBKMQsw
-CQYDVQQGEwJVUzEZMBcGA1UEChMQQ2xvdWRmbGFyZSwgSW5jLjEgMB4GA1UEAxMX
-Q2xvdWRmbGFyZSBJbmMgRUNDIENBLTMwHhcNMjEwNTMxMDAwMDAwWhcNMjIwNTMw
-MjM1OTU5WjB1MQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQG
-A1UEBxMNU2FuIEZyYW5jaXNjbzEZMBcGA1UEChMQQ2xvdWRmbGFyZSwgSW5jLjEe
-MBwGA1UEAxMVc25pLmNsb3VkZmxhcmVzc2wuY29tMFkwEwYHKoZIzj0CAQYIKoZI
-zj0DAQcDQgAE5j2AzEq9lHtmvGzbKDI6vxZW2DNixgQ2OH6iOcQL4sQs732FYI+b
-6KZEm6TlzNAA7xzr7g/3g4xHkQbA0mSPz6OCA3kwggN1MB8GA1UdIwQYMBaAFKXO
-N+rrsHUOlGeItEX62SQQh5YfMB0GA1UdDgQWBBQPCpU0cygiZgzbXvCWvKekr69W
-PTBABgNVHREEOTA3gg1mYXQtc3BhY2UuY29tghVzbmkuY2xvdWRmbGFyZXNzbC5j
-b22CDyouZmF0LXNwYWNlLmNvbTAOBgNVHQ8BAf8EBAMCB4AwHQYDVR0lBBYwFAYI
-KwYBBQUHAwEGCCsGAQUFBwMCMHsGA1UdHwR0MHIwN6A1oDOGMWh0dHA6Ly9jcmwz
-LmRpZ2ljZXJ0LmNvbS9DbG91ZGZsYXJlSW5jRUNDQ0EtMy5jcmwwN6A1oDOGMWh0
-dHA6Ly9jcmw0LmRpZ2ljZXJ0LmNvbS9DbG91ZGZsYXJlSW5jRUNDQ0EtMy5jcmww
-PgYDVR0gBDcwNTAzBgZngQwBAgIwKTAnBggrBgEFBQcCARYbaHR0cDovL3d3dy5k
-aWdpY2VydC5jb20vQ1BTMHYGCCsGAQUFBwEBBGowaDAkBggrBgEFBQcwAYYYaHR0
-cDovL29jc3AuZGlnaWNlcnQuY29tMEAGCCsGAQUFBzAChjRodHRwOi8vY2FjZXJ0
-cy5kaWdpY2VydC5jb20vQ2xvdWRmbGFyZUluY0VDQ0NBLTMuY3J0MAwGA1UdEwEB
-/wQCMAAwggF9BgorBgEEAdZ5AgQCBIIBbQSCAWkBZwB2ACl5vvCeOTkh8FZzn2Ol
-d+W+V32cYAr4+U1dJlwlXceEAAABecEg3RMAAAQDAEcwRQIhAPRHudhTFUT67+yY
-iiXWZFFUFbytAlHtztkMzzdb9WRJAiBaFczF9txauDQp4nFy5BVtWXqyCOYV/dMe
-fcNmIrzTrQB1ACJFRQdZVSRWlj+hL/H3bYbgIyZjrcBLf13Gg1xu4g8CAAABecEg
-3N8AAAQDAEYwRAIgKpu1bYuvdUKI6DepM5X2YodbFJQTw3iJtmsJbAv56ioCIH1b
-BFUgoetIjCrfC3jiUez/owNC8WGcZPpCtFZkUH2aAHYAUaOw9f0BeZxWbbg3eI8M
-pHrMGyfL956IQpoN/tSLBeUAAAF5wSDdLAAABAMARzBFAiEAlBYi/j0t6Id12fn6
-HjyU2yI1yvot3VQ0624D+eaGtH4CIAZVmVW59doQeLfzojGl/QeDeGgMyF262kn3
-5CKMpSLsMAoGCCqGSM49BAMCA0cAMEQCIAIzRLIQY9tTElUIJu8+DzaXvhxWriYc
-xeMw2271N+S5AiAt8qXddjIHBxKksMHs4v4Ir6b27QLIR6zzI9fUO9NJDA==
------END CERTIFICATE-----
-)EOF";
 
 // InfluxDB client instance with preconfigured InfluxCloud certificate
 InfluxDBClient client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbFatSpace2CACert);
