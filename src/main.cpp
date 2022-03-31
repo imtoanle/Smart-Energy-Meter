@@ -38,8 +38,6 @@ PZEM004Tv30 pzem(pzemSWSerial);
 //  Central Europe: "CET-1CEST,M3.5.0,M10.5.0/3"
 #define TZ_INFO "Asia/Ho_Chi_Minh"
 
-// openssl s_client -showcerts -connect influxdb2.fat-space.com:443
-
 // InfluxDB client instance with preconfigured InfluxCloud certificate
 InfluxDBClient client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbFatSpace2CACert);
 
